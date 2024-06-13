@@ -125,10 +125,12 @@ class FileViewerApp:
 
     def load_file(self):
         self.page_index = self.config["files"].get(self.file_path, 0) // self.lines_per_page
+        try:
+            self.file_content = self.open_file_with_detected_encoding().splitlines()
 
-        self.file_content = self.open_file_with_detected_encoding().splitlines()
-
-        self.scroll_queue.put("update_page")
+            self.scroll_queue.put("update_page")
+        except Exception as e:
+            self.show_help()
 
     def update_page(self):
         self.text_widget.config(state='normal')
