@@ -5,6 +5,9 @@ import queue
 import json
 import os
 import chardet
+import pystray
+from PIL import Image, ImageDraw
+
 
 class FileViewerApp:
     def __init__(self, root):
@@ -41,7 +44,7 @@ class FileViewerApp:
         self.title_bar.pack(fill=tk.X)
         self.title_label = tk.Label(self.title_bar, text="File Viewer", bg='black', fg='white')
         self.title_label.pack(side=tk.LEFT, padx=10)
-        self.close_button = tk.Button(self.title_bar, text='X', command=self.on_close, bg='black', fg='white', bd=0)
+        self.close_button = tk.Button(self.title_bar, text='X', command=self.hide_window, bg='black', fg='white', bd=0)
         self.close_button.pack(side=tk.RIGHT)
 
         # 允许拖动窗口
@@ -87,6 +90,8 @@ class FileViewerApp:
             "R: 上一页\n"
         )
         self.show_help()
+
+        self.create_tray_icon()
 
     def load_config(self):
         try:
@@ -249,6 +254,36 @@ class FileViewerApp:
     def on_close(self):
         self.save_last_line()
         self.root.destroy()
+
+    def show_window(self):
+        self.root.deiconify()
+
+    def hide_window(self):
+        self.root.withdraw()
+
+    def create_image(self):
+        # 创建托盘图标
+        width = 64
+        height = 64
+        color1 = "black"
+        color2 = "white"
+        image = Image.new("RGB", (width, height), color1)
+        dc = ImageDraw.Draw(image)
+        dc.rectangle(
+            (width // 2, 0, width, height // 2),
+            fill=color2)
+        dc.rectangle(
+            (0, height // 2, width // 2, height),
+            fill=color2)
+        return image
+
+    def create_tray_icon(self):
+        # 创建托盘图标菜单
+        menu = (pystray.MenuItem('Show', self.show_window), pystray.MenuItem('Hide', self.hide_window),
+                pystray.MenuItem('Quit', self.on_close))
+        self.tray_icon = pystray.Icon("File Viewer", self.create_image(), "File Viewer", menu)
+
+        threading.Thread(target=self.tray_icon.run).start()
 
     def update_lines_per_page(self):
         self.text_widget.config(state='normal')
