@@ -4,6 +4,7 @@ import threading
 import queue
 import json
 import os
+import chardet
 
 class FileViewerApp:
     def __init__(self, root):
@@ -109,10 +110,24 @@ class FileViewerApp:
         if self.file_path:
             threading.Thread(target=self.load_file).start()
 
+    def open_file_with_detected_encoding(self):
+        with open(self.file_path, 'rb') as f:
+            raw_data = f.read()
+
+        result = chardet.detect(raw_data)
+        encoding = result['encoding']
+
+        if encoding is None:
+            raise ValueError("Failed to detect encoding")
+
+        with open(self.file_path, 'r', encoding=encoding) as f:
+            return f.read()
+
     def load_file(self):
         self.page_index = self.config["files"].get(self.file_path, 0) // self.lines_per_page
-        with open(self.file_path, 'r', encoding='utf-8') as file:
-            self.file_content = file.readlines()
+
+        self.file_content = self.open_file_with_detected_encoding().splitlines()
+
         self.scroll_queue.put("update_page")
 
     def update_page(self):
