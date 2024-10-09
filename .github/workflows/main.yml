@@ -2,9 +2,9 @@ name: 使用 Pyinstaller 打包应用程序
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build:
